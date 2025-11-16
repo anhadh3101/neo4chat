@@ -8,7 +8,7 @@ services:
       - /$HOME/neo4j/data:/data
       - /$HOME/neo4j/plugins:/plugins
     environment:
-      - NEO4J_AUTH=neo4j/your_password
+      - NEO4J_AUTH=neo4j/neo4j_2025
     ports:
       - "7474:7474"
       - "7687:7687"
