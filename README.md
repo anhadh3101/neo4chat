@@ -20,8 +20,7 @@ You do **not** need Maven installed globally because the project uses the Maven 
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>.git
-cd cs157c_project
+git clone https://github.com/anhadh3101/neo4chat.git
 ```
 
 ### 2. Navigate to the Spring Boot app
