@@ -1,68 +1,97 @@
-Neo4Chat
+# Neo4Chat
 
-## Getting Started
+## Overview
 
-### Prerequisites
-- **Java**: Install Java 21 (or a compatible JDK). Verify with:
+Neo4Chat is a Spring Boot + Neo4j application.  
+The recommended way to run it is with **Docker Compose** so you and your team don’t need local Java/Maven/Neo4j installed.
+
+---
+
+## Run with Docker Compose (recommended)
+
+### 1. Prerequisites
+- **Docker** and **Docker Compose**
+- **Git**
+
+Verify they’re installed:
 
 ```bash
-java -version
-```
-
-- **Git**: Install Git and verify with:
-
-```bash
+docker --version
+docker compose version
 git --version
 ```
 
-You do **not** need Maven installed globally because the project uses the Maven Wrapper (`mvnw`).
-
-### 1. Clone the repository
+### 2. Clone the repository
 
 ```bash
 git clone https://github.com/anhadh3101/neo4chat.git
+cd neo4chat
 ```
 
-### 2. Navigate to the Spring Boot app
+### 3. Start the stack (Spring Boot + Neo4j)
 
-The Spring Boot application lives in the `demo` directory:
+From the project root (where `docker-compose.yml` is located), run:
 
 ```bash
-cd demo
+docker compose up --build
 ```
 
-### 3. Run the application (dev mode)
+This will:
+- Build the Spring Boot image from the `demo` directory using its `Dockerfile`
+- Start the **Spring Boot app** container (`springboot`) on port **8080**
+- Start **Neo4j** on:
+  - `7474` (Neo4j Browser)
+  - `7687` (Bolt protocol)
 
-Using the Maven Wrapper:
+### 4. Access the services
 
-```bash
-./mvnw spring-boot:run
-```
-
-On Windows (PowerShell or cmd):
-
-```bash
-mvnw.cmd spring-boot:run
-```
-
-The application will start on `http://localhost:8080`.
-
-### 4. Build a runnable JAR (optional)
-
-```bash
-./mvnw clean package
-```
-
-Then run the packaged JAR:
-
-```bash
-java -jar target/demo-0.0.1-SNAPSHOT.jar
-```
+- Spring Boot API: `http://localhost:8080`
+- Neo4j Browser: `http://localhost:7474`
 
 ### 5. Test the application
 
-Once the app is running, you can hit these endpoints in a browser or with `curl`:
+With the stack running, you can hit these endpoints in a browser or with `curl`:
 
 - `http://localhost:8080/` – basic health check
 - `http://localhost:8080/hello`
 - `http://localhost:8080/api/status`
+
+Example using `curl`:
+
+```bash
+curl http://localhost:8080/
+curl http://localhost:8080/hello
+curl http://localhost:8080/api/status
+```
+
+### 6. Stop the stack
+
+From the project root:
+
+```bash
+docker compose down
+```
+
+This stops and removes the containers (images and volumes remain unless you add extra flags).
+
+---
+
+## (Optional) Run the Spring Boot app locally
+
+If you want to run the app without Docker (for local development):
+
+### Prerequisites
+- **Java 21+**
+- **Git**
+
+### Steps
+
+```bash
+git clone https://github.com/anhadh3101/neo4chat.git
+cd neo4chat/demo
+
+./mvnw spring-boot:run
+```
+
+The app will start on `http://localhost:8080`.  
+Neo4j must be running separately if the app needs to connect to it.

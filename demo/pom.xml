@@ -43,6 +43,8 @@
 	</dependencies>
 
 	<build>
+		<finalName>neo4chat</finalName>
+		
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
