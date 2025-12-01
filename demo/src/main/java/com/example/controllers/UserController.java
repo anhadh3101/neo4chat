@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,12 +34,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getProfile(@PathVariable Long id) {
+    public User getProfile(@PathVariable UUID id) {
         return userService.viewProfile(id);
     }
 
     @PutMapping("/{id}")
-    public User editProfile(@PathVariable Long id, @RequestBody EditProfileRequest req) {
+    public User editProfile(@PathVariable UUID id, @RequestBody EditProfileRequest req) {
         return userService.editProfile(id, req);
     }
 }
