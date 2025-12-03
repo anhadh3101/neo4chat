@@ -30,8 +30,11 @@ public class UserController {
     private Neo4jDriverService neo4jDriverService;
 
     @GetMapping("/search")
-    public List<UserSearchResult> searchUsers(@RequestParam String q) {
-        return neo4jDriverService.searchUsers(q);
+    public List<UserSearchResult> searchUsers(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+        return neo4jDriverService.searchUsers(q, limit, offset);
     }
 
     @PostMapping("/register")
@@ -55,8 +58,10 @@ public class UserController {
     }
 
     @GetMapping("/popular")
-    public List<UserSearchResult> getPopularUsers(@RequestParam(defaultValue = "10") int limit) {
-        return neo4jDriverService.getPopularUsers(limit);
+    public List<UserSearchResult> getPopularUsers(
+            @RequestParam String userId,
+            @RequestParam(defaultValue = "10") int limit) {
+        return neo4jDriverService.getPopularUsers(userId, limit);
     }
 
     @GetMapping("/{userId}/recommendations")

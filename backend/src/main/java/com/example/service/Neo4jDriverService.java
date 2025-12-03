@@ -88,17 +88,23 @@ public class Neo4jDriverService {
      * Search for users by name or username (case-insensitive partial match)
      * 
      * @param searchTerm The search term to match against name or username
+     * @param limit      Maximum number of results to return (default: 10)
+     * @param offset     Number of results to skip for pagination (default: 0)
      * @return List of users matching the search term (userId, name, username, and
      *         bio)
      */
-    public java.util.List<UserSearchResult> searchUsers(String searchTerm) {
+    public java.util.List<UserSearchResult> searchUsers(String searchTerm, int limit, int offset) {
         try (Session session = driver.session()) {
             String cypher = "MATCH (u:User) " +
                     "WHERE (u.name IS NOT NULL AND toLower(u.name) CONTAINS toLower($searchTerm)) " +
                     "OR (u.username IS NOT NULL AND toLower(u.username) CONTAINS toLower($searchTerm)) " +
-                    "RETURN toString(u.userId) as userId, u.name as name, u.username as username, u.bio as bio";
+                    "RETURN toString(u.userId) as userId, u.name as name, u.username as username, u.bio as bio " +
+                    "SKIP $offset LIMIT $limit";
 
-            Result result = session.run(cypher, Map.of("searchTerm", searchTerm));
+            Result result = session.run(cypher, Map.of(
+                    "searchTerm", searchTerm,
+                    "limit", limit,
+                    "offset", offset));
 
             java.util.List<UserSearchResult> users = new java.util.ArrayList<>();
             while (result.hasNext()) {
@@ -125,21 +131,28 @@ public class Neo4jDriverService {
 
     /**
      * Get the most-followed users ordered by follower count
+     * Excludes users that the current user is already following
      * 
-     * @param limit Maximum number of users to return (default: 10)
+     * @param userId The userId of the current user (as string)
+     * @param limit  Maximum number of users to return (default: 10)
      * @return List of users ordered by followCount descending (userId, name,
      *         username, bio, followCount)
      */
-    public java.util.List<UserSearchResult> getPopularUsers(int limit) {
+    public java.util.List<UserSearchResult> getPopularUsers(String userId, int limit) {
         try (Session session = driver.session()) {
-            String cypher = "MATCH (u:User) " +
-                    "WHERE u.followCount IS NOT NULL AND u.followCount > 0 " +
+            String cypher = "MATCH (current:User), (u:User) " +
+                    "WHERE toString(current.userId) = $userId " +
+                    "AND current <> u " +
+                    "AND u.followCount IS NOT NULL AND u.followCount > 0 " +
+                    "AND NOT (current)-[:FOLLOWS]->(u) " +
                     "RETURN toString(u.userId) as userId, u.name as name, u.username as username, u.bio as bio, toInteger(u.followCount) as followCount "
                     +
                     "ORDER BY u.followCount DESC " +
                     "LIMIT $limit";
 
-            Result result = session.run(cypher, Map.of("limit", limit));
+            Result result = session.run(cypher, Map.of(
+                    "userId", userId,
+                    "limit", limit));
 
             java.util.List<UserSearchResult> users = new java.util.ArrayList<>();
             while (result.hasNext()) {
