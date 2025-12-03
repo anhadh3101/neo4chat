@@ -90,15 +90,16 @@ public class Neo4jDriverService {
      * @param searchTerm The search term to match against name or username
      * @param limit      Maximum number of results to return (default: 10)
      * @param offset     Number of results to skip for pagination (default: 0)
-     * @return List of users matching the search term (userId, name, username, and
-     *         bio)
+     * @return List of users matching the search term (userId, name, username, bio,
+     *         and followCount)
      */
     public java.util.List<UserSearchResult> searchUsers(String searchTerm, int limit, int offset) {
         try (Session session = driver.session()) {
             String cypher = "MATCH (u:User) " +
                     "WHERE (u.name IS NOT NULL AND toLower(u.name) CONTAINS toLower($searchTerm)) " +
                     "OR (u.username IS NOT NULL AND toLower(u.username) CONTAINS toLower($searchTerm)) " +
-                    "RETURN toString(u.userId) as userId, u.name as name, u.username as username, u.bio as bio " +
+                    "RETURN toString(u.userId) as userId, u.name as name, u.username as username, u.bio as bio, toInteger(u.followCount) as followCount "
+                    +
                     "SKIP $offset LIMIT $limit";
 
             Result result = session.run(cypher, Map.of(
@@ -122,6 +123,9 @@ public class Neo4jDriverService {
                 }
                 if (!record.get("bio").isNull()) {
                     user.setBio(record.get("bio").asString());
+                }
+                if (!record.get("followCount").isNull()) {
+                    user.setFollowCount(record.get("followCount").asInt());
                 }
                 users.add(user);
             }

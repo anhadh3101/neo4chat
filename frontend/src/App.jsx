@@ -1,21 +1,24 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
 import Explore from './pages/Explore';
+import Profile from './pages/Profile';
 import './App.css';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/" element={
-          <div className="container mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-4">Neo4Chat</h1>
-            <p className="mb-4">Welcome to Neo4Chat!</p>
-            <a href="/explore" className="text-primary hover:underline">
-              Go to Explore Page
-            </a>
-          </div>
-        } />
+        {/* Routes with header */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+        
+        {/* Routes without header (login/signup - to be implemented later) */}
+        {/* <Route path="/login" element={<Login />} /> */}
+        {/* <Route path="/signup" element={<Signup />} /> */}
       </Routes>
     </BrowserRouter>
   );
