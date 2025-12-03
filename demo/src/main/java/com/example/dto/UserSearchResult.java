@@ -1,29 +1,36 @@
 package com.example.dto;
 
-import java.util.UUID;
-
 public class UserSearchResult {
-    private UUID id;
+    private String userId;
     private String name;
     private String username;
     private String bio;
+    private Integer followCount;
 
     public UserSearchResult() {
     }
 
-    public UserSearchResult(UUID id, String name, String username, String bio) {
-        this.id = id;
+    public UserSearchResult(String userId, String name, String username, String bio) {
+        this.userId = userId;
         this.name = name;
         this.username = username;
         this.bio = bio;
     }
 
-    public UUID getId() {
-        return id;
+    public UserSearchResult(String userId, String name, String username, String bio, Integer followCount) {
+        this.userId = userId;
+        this.name = name;
+        this.username = username;
+        this.bio = bio;
+        this.followCount = followCount;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getName() {
@@ -48,5 +55,13 @@ public class UserSearchResult {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public Integer getFollowCount() {
+        return followCount;
+    }
+
+    public void setFollowCount(Integer followCount) {
+        this.followCount = followCount;
     }
 }

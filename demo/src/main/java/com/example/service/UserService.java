@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 public class UserService {
 
@@ -48,12 +46,12 @@ public class UserService {
         return user;
     }
 
-    public User viewProfile(UUID userId) {
+    public User viewProfile(Integer userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Not found"));
     }
 
-    public User editProfile(UUID userId, EditProfileRequest req) {
+    public User editProfile(Integer userId, EditProfileRequest req) {
         User user = viewProfile(userId);
         user.setName(req.name);
         user.setBio(req.bio);

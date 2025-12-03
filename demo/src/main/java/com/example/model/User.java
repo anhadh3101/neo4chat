@@ -2,30 +2,33 @@ package com.example.model;
 
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-
-import java.util.UUID;
 
 @Node("User")
 public class User {
 
-    @Id @GeneratedValue
-    private UUID id;
+    @Id
+    private Integer userId;
 
     private String name;
     private String username;
     private String email;
     private String password; // hashed
     private String bio;
+    private String city;
+    private String country;
+    private String dob; // ISO 8601 format: 1997-01-03T00:00:00Z
+    private Integer followCount;
+    private String gender;
+    private String interest; // comma-separated list
 
     // Getters and Setters
 
-    public UUID getId() {
-        return id;
+    public Integer getUserId() {
+        return userId;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
     public String getName() {
@@ -67,6 +70,52 @@ public class User {
     public void setBio(String bio) {
         this.bio = bio;
     }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getDob() {
+        return dob;
+    }
+
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+
+    public Integer getFollowCount() {
+        return followCount;
+    }
+
+    public void setFollowCount(Integer followCount) {
+        this.followCount = followCount;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getInterest() {
+        return interest;
+    }
+
+    public void setInterest(String interest) {
+        this.interest = interest;
+    }
 }
-
-

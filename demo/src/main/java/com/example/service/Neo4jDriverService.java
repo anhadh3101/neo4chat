@@ -36,9 +36,9 @@ public class Neo4jDriverService {
 
     /**
      * Example method: Fetch the first 10 Users from the database
-     * This method supports both old schema (city, country, dob, gender, interest,
-     * userId)
-     * and new schema (id, username, email, password, bio) users
+     * Returns all properties of User nodes (userId, name, username, email,
+     * password, bio,
+     * city, country, dob, gender, interest, followCount)
      */
     public java.util.List<java.util.Map<String, Object>> getFirst10Users() {
         try (Session session = driver.session()) {
@@ -88,7 +88,7 @@ public class Neo4jDriverService {
      * Search for users by name or username (case-insensitive partial match)
      * 
      * @param searchTerm The search term to match against name or username
-     * @return List of users matching the search term (only name, username, id, and
+     * @return List of users matching the search term (userId, name, username, and
      *         bio)
      */
     public java.util.List<UserSearchResult> searchUsers(String searchTerm) {
@@ -96,7 +96,7 @@ public class Neo4jDriverService {
             String cypher = "MATCH (u:User) " +
                     "WHERE (u.name IS NOT NULL AND toLower(u.name) CONTAINS toLower($searchTerm)) " +
                     "OR (u.username IS NOT NULL AND toLower(u.username) CONTAINS toLower($searchTerm)) " +
-                    "RETURN u.userId as userId, u.name as name, u.username as username, u.bio as bio";
+                    "RETURN toString(u.userId) as userId, u.name as name, u.username as username, u.bio as bio";
 
             Result result = session.run(cypher, Map.of("searchTerm", searchTerm));
 
@@ -106,12 +106,7 @@ public class Neo4jDriverService {
                 UserSearchResult user = new UserSearchResult();
 
                 if (!record.get("userId").isNull()) {
-                    String userIdStr = record.get("userId").asString();
-                    try {
-                        user.setId(java.util.UUID.fromString(userIdStr));
-                    } catch (IllegalArgumentException e) {
-                        // userId is not a valid UUID format, skip setting id
-                    }
+                    user.setUserId(record.get("userId").asString());
                 }
                 if (!record.get("name").isNull()) {
                     user.setName(record.get("name").asString());
@@ -121,6 +116,50 @@ public class Neo4jDriverService {
                 }
                 if (!record.get("bio").isNull()) {
                     user.setBio(record.get("bio").asString());
+                }
+                users.add(user);
+            }
+            return users;
+        }
+    }
+
+    /**
+     * Get the most-followed users ordered by follower count
+     * 
+     * @param limit Maximum number of users to return (default: 10)
+     * @return List of users ordered by followCount descending (userId, name,
+     *         username, bio, followCount)
+     */
+    public java.util.List<UserSearchResult> getPopularUsers(int limit) {
+        try (Session session = driver.session()) {
+            String cypher = "MATCH (u:User) " +
+                    "WHERE u.followCount IS NOT NULL AND u.followCount > 0 " +
+                    "RETURN toString(u.userId) as userId, u.name as name, u.username as username, u.bio as bio, toInteger(u.followCount) as followCount "
+                    +
+                    "ORDER BY u.followCount DESC " +
+                    "LIMIT $limit";
+
+            Result result = session.run(cypher, Map.of("limit", limit));
+
+            java.util.List<UserSearchResult> users = new java.util.ArrayList<>();
+            while (result.hasNext()) {
+                var record = result.next();
+                UserSearchResult user = new UserSearchResult();
+
+                if (!record.get("userId").isNull()) {
+                    user.setUserId(record.get("userId").asString());
+                }
+                if (!record.get("name").isNull()) {
+                    user.setName(record.get("name").asString());
+                }
+                if (!record.get("username").isNull()) {
+                    user.setUsername(record.get("username").asString());
+                }
+                if (!record.get("bio").isNull()) {
+                    user.setBio(record.get("bio").asString());
+                }
+                if (!record.get("followCount").isNull()) {
+                    user.setFollowCount(record.get("followCount").asInt());
                 }
                 users.add(user);
             }

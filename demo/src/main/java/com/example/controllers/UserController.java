@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -46,12 +45,17 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getProfile(@PathVariable UUID id) {
+    public User getProfile(@PathVariable Integer id) {
         return userService.viewProfile(id);
     }
 
     @PutMapping("/{id}")
-    public User editProfile(@PathVariable UUID id, @RequestBody EditProfileRequest req) {
+    public User editProfile(@PathVariable Integer id, @RequestBody EditProfileRequest req) {
         return userService.editProfile(id, req);
+    }
+
+    @GetMapping("/popular")
+    public List<UserSearchResult> getPopularUsers(@RequestParam(defaultValue = "10") int limit) {
+        return neo4jDriverService.getPopularUsers(limit);
     }
 }
