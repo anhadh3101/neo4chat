@@ -166,4 +166,194 @@ public class Neo4jDriverService {
             return users;
         }
     }
+
+    /**
+     * Get friend recommendations based on common connections
+     * Finds users who are followed by people that the current user follows
+     * Falls back to popular users if no common connections are found
+     * 
+     * @param userId The userId of the user requesting recommendations (as string)
+     * @return List of up to 10 recommended users (userId, name, username, bio)
+     */
+    public java.util.List<UserSearchResult> getFriendRecommendations(String userId) {
+        try (Session session = driver.session()) {
+            // First, try to find recommendations based on common connections
+            String cypher = "MATCH (current:User)-[:FOLLOWS]->(friend:User)-[:FOLLOWS]->(recommended:User) " +
+                    "WHERE toString(current.userId) = $userId " +
+                    "AND current <> recommended " +
+                    "AND NOT (current)-[:FOLLOWS]->(recommended) " +
+                    "RETURN toString(recommended.userId) as userId, recommended.name as name, recommended.username as username, recommended.bio as bio, toInteger(recommended.followCount) as followCount, count(friend) as commonConnections "
+                    +
+                    "ORDER BY commonConnections DESC " +
+                    "LIMIT 10";
+
+            Result result = session.run(cypher, Map.of("userId", userId));
+
+            java.util.List<UserSearchResult> users = new java.util.ArrayList<>();
+            while (result.hasNext()) {
+                var record = result.next();
+                UserSearchResult user = new UserSearchResult();
+
+                if (!record.get("userId").isNull()) {
+                    user.setUserId(record.get("userId").asString());
+                }
+                if (!record.get("name").isNull()) {
+                    user.setName(record.get("name").asString());
+                }
+                if (!record.get("username").isNull()) {
+                    user.setUsername(record.get("username").asString());
+                }
+                if (!record.get("bio").isNull()) {
+                    user.setBio(record.get("bio").asString());
+                }
+                if (!record.get("followCount").isNull()) {
+                    user.setFollowCount(record.get("followCount").asInt());
+                }
+                users.add(user);
+            }
+
+            // If no recommendations found based on common connections, fall back to popular
+            // users
+            if (users.isEmpty()) {
+                String fallbackCypher = "MATCH (current:User), (recommended:User) " +
+                        "WHERE toString(current.userId) = $userId " +
+                        "AND current <> recommended " +
+                        "AND NOT (current)-[:FOLLOWS]->(recommended) " +
+                        "AND recommended.followCount IS NOT NULL AND recommended.followCount > 0 " +
+                        "RETURN toString(recommended.userId) as userId, recommended.name as name, recommended.username as username, recommended.bio as bio, toInteger(recommended.followCount) as followCount "
+                        +
+                        "ORDER BY recommended.followCount DESC " +
+                        "LIMIT 10";
+
+                Result fallbackResult = session.run(fallbackCypher, Map.of("userId", userId));
+                while (fallbackResult.hasNext()) {
+                    var record = fallbackResult.next();
+                    UserSearchResult user = new UserSearchResult();
+
+                    if (!record.get("userId").isNull()) {
+                        user.setUserId(record.get("userId").asString());
+                    }
+                    if (!record.get("name").isNull()) {
+                        user.setName(record.get("name").asString());
+                    }
+                    if (!record.get("username").isNull()) {
+                        user.setUsername(record.get("username").asString());
+                    }
+                    if (!record.get("bio").isNull()) {
+                        user.setBio(record.get("bio").asString());
+                    }
+                    if (!record.get("followCount").isNull()) {
+                        user.setFollowCount(record.get("followCount").asInt());
+                    }
+                    users.add(user);
+                }
+            }
+
+            return users;
+        }
+    }
+
+    /**
+     * Diagnostic method to check user relationships and graph structure
+     * 
+     * @param userId The userId to diagnose (as string)
+     * @return Map containing diagnostic information about the user's relationships
+     */
+    public java.util.Map<String, Object> diagnoseUserRelationships(String userId) {
+        try (Session session = driver.session()) {
+            java.util.Map<String, Object> diagnostics = new java.util.HashMap<>();
+
+            // Check if user exists
+            String userExistsCypher = "MATCH (u:User) WHERE toString(u.userId) = $userId RETURN toString(u.userId) as userId, u.name as name, u.username as username";
+            Result userResult = session.run(userExistsCypher, Map.of("userId", userId));
+            if (!userResult.hasNext()) {
+                diagnostics.put("error", "User not found");
+                return diagnostics;
+            }
+            var userRecord = userResult.next();
+            diagnostics.put("user", Map.of(
+                    "userId", userRecord.get("userId").asString(),
+                    "name", userRecord.get("name").isNull() ? "null" : userRecord.get("name").asString(),
+                    "username", userRecord.get("username").isNull() ? "null" : userRecord.get("username").asString()));
+
+            // Get all outgoing relationships from this user
+            String outgoingCypher = "MATCH (u:User)-[r]->(other:User) " +
+                    "WHERE toString(u.userId) = $userId " +
+                    "RETURN type(r) as relationshipType, toString(other.userId) as otherUserId, other.name as otherName, other.username as otherUsername "
+                    +
+                    "ORDER BY type(r), other.userId";
+            Result outgoingResult = session.run(outgoingCypher, Map.of("userId", userId));
+            java.util.List<java.util.Map<String, Object>> outgoing = new java.util.ArrayList<>();
+            while (outgoingResult.hasNext()) {
+                var record = outgoingResult.next();
+                java.util.Map<String, Object> rel = new java.util.HashMap<>();
+                rel.put("relationshipType", record.get("relationshipType").asString());
+                rel.put("otherUserId", record.get("otherUserId").asString());
+                rel.put("otherName", record.get("otherName").isNull() ? null : record.get("otherName").asString());
+                rel.put("otherUsername",
+                        record.get("otherUsername").isNull() ? null : record.get("otherUsername").asString());
+                outgoing.add(rel);
+            }
+            diagnostics.put("outgoingRelationships", outgoing);
+            diagnostics.put("outgoingCount", outgoing.size());
+
+            // Get all incoming relationships to this user
+            String incomingCypher = "MATCH (other:User)-[r]->(u:User) " +
+                    "WHERE toString(u.userId) = $userId " +
+                    "RETURN type(r) as relationshipType, toString(other.userId) as otherUserId, other.name as otherName, other.username as otherUsername "
+                    +
+                    "ORDER BY type(r), other.userId";
+            Result incomingResult = session.run(incomingCypher, Map.of("userId", userId));
+            java.util.List<java.util.Map<String, Object>> incoming = new java.util.ArrayList<>();
+            while (incomingResult.hasNext()) {
+                var record = incomingResult.next();
+                java.util.Map<String, Object> rel = new java.util.HashMap<>();
+                rel.put("relationshipType", record.get("relationshipType").asString());
+                rel.put("otherUserId", record.get("otherUserId").asString());
+                rel.put("otherName", record.get("otherName").isNull() ? null : record.get("otherName").asString());
+                rel.put("otherUsername",
+                        record.get("otherUsername").isNull() ? null : record.get("otherUsername").asString());
+                incoming.add(rel);
+            }
+            diagnostics.put("incomingRelationships", incoming);
+            diagnostics.put("incomingCount", incoming.size());
+
+            // Check what relationship types exist in the graph (sample)
+            String relationshipTypesCypher = "MATCH ()-[r]->() RETURN DISTINCT type(r) as relationshipType, count(*) as count ORDER BY count DESC LIMIT 10";
+            Result typesResult = session.run(relationshipTypesCypher);
+            java.util.List<java.util.Map<String, Object>> relationshipTypes = new java.util.ArrayList<>();
+            while (typesResult.hasNext()) {
+                var record = typesResult.next();
+                java.util.Map<String, Object> typeInfo = new java.util.HashMap<>();
+                typeInfo.put("relationshipType", record.get("relationshipType").asString());
+                typeInfo.put("count", record.get("count").asLong());
+                relationshipTypes.add(typeInfo);
+            }
+            diagnostics.put("relationshipTypesInGraph", relationshipTypes);
+
+            // Check if FOLLOWS relationships exist from this user's friends
+            String friendsFollowCypher = "MATCH (current:User)-[:FOLLOWS]->(friend:User)-[r]->(other:User) " +
+                    "WHERE toString(current.userId) = $userId " +
+                    "RETURN toString(friend.userId) as friendUserId, friend.username as friendUsername, type(r) as relationshipType, toString(other.userId) as otherUserId, other.username as otherUsername "
+                    +
+                    "LIMIT 20";
+            Result friendsFollowResult = session.run(friendsFollowCypher, Map.of("userId", userId));
+            java.util.List<java.util.Map<String, Object>> friendsFollow = new java.util.ArrayList<>();
+            while (friendsFollowResult.hasNext()) {
+                var record = friendsFollowResult.next();
+                java.util.Map<String, Object> followInfo = new java.util.HashMap<>();
+                followInfo.put("friendUserId", record.get("friendUserId").asString());
+                followInfo.put("friendUsername",
+                        record.get("friendUsername").isNull() ? null : record.get("friendUsername").asString());
+                followInfo.put("relationshipType", record.get("relationshipType").asString());
+                followInfo.put("otherUserId", record.get("otherUserId").asString());
+                followInfo.put("otherUsername",
+                        record.get("otherUsername").isNull() ? null : record.get("otherUsername").asString());
+                friendsFollow.add(followInfo);
+            }
+            diagnostics.put("friendsRelationships", friendsFollow);
+
+            return diagnostics;
+        }
+    }
 }

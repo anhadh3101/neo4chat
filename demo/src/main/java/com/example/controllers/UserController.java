@@ -58,4 +58,14 @@ public class UserController {
     public List<UserSearchResult> getPopularUsers(@RequestParam(defaultValue = "10") int limit) {
         return neo4jDriverService.getPopularUsers(limit);
     }
+
+    @GetMapping("/{userId}/recommendations")
+    public List<UserSearchResult> getFriendRecommendations(@PathVariable String userId) {
+        return neo4jDriverService.getFriendRecommendations(userId);
+    }
+
+    @GetMapping("/{userId}/diagnostics")
+    public java.util.Map<String, Object> diagnoseUserRelationships(@PathVariable String userId) {
+        return neo4jDriverService.diagnoseUserRelationships(userId);
+    }
 }
