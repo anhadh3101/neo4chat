@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.example.dto.UserSearchResult;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Result;
@@ -80,6 +81,50 @@ public class Neo4jDriverService {
                 tx.run(cypher, parameters);
                 return null;
             });
+        }
+    }
+
+    /**
+     * Search for users by name or username (case-insensitive partial match)
+     * 
+     * @param searchTerm The search term to match against name or username
+     * @return List of users matching the search term (only name, username, id, and
+     *         bio)
+     */
+    public java.util.List<UserSearchResult> searchUsers(String searchTerm) {
+        try (Session session = driver.session()) {
+            String cypher = "MATCH (u:User) " +
+                    "WHERE (u.name IS NOT NULL AND toLower(u.name) CONTAINS toLower($searchTerm)) " +
+                    "OR (u.username IS NOT NULL AND toLower(u.username) CONTAINS toLower($searchTerm)) " +
+                    "RETURN u.userId as userId, u.name as name, u.username as username, u.bio as bio";
+
+            Result result = session.run(cypher, Map.of("searchTerm", searchTerm));
+
+            java.util.List<UserSearchResult> users = new java.util.ArrayList<>();
+            while (result.hasNext()) {
+                var record = result.next();
+                UserSearchResult user = new UserSearchResult();
+
+                if (!record.get("userId").isNull()) {
+                    String userIdStr = record.get("userId").asString();
+                    try {
+                        user.setId(java.util.UUID.fromString(userIdStr));
+                    } catch (IllegalArgumentException e) {
+                        // userId is not a valid UUID format, skip setting id
+                    }
+                }
+                if (!record.get("name").isNull()) {
+                    user.setName(record.get("name").asString());
+                }
+                if (!record.get("username").isNull()) {
+                    user.setUsername(record.get("username").asString());
+                }
+                if (!record.get("bio").isNull()) {
+                    user.setBio(record.get("bio").asString());
+                }
+                users.add(user);
+            }
+            return users;
         }
     }
 }
