@@ -8,6 +8,7 @@ import com.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
@@ -56,6 +57,48 @@ public class UserService {
         user.setName(req.name);
         user.setBio(req.bio);
         return userRepository.save(user);
+    }
+
+    // UC-5
+    @Transactional
+    public void followUser(String userEmail, String followedUserEmail) {
+        if (userEmail.equals(followedUserEmail)) {
+            throw new RuntimeException("You cannot follow yourself");
+        }
+
+        if (!userRepository.existsByEmail(userEmail)) {
+            throw new RuntimeException("User not found");
+        }
+
+        if (!userRepository.existsByEmail(followedUserEmail)) {
+            throw new RuntimeException("Followed user not found");
+        }
+
+        userRepository.createFollowsRelationship(userEmail, followedUserEmail);
+
+    }
+
+    // UC-6
+    @Transactional
+    public void unfollowUser(String userEmail, String followedUserEmail) {
+        if (userEmail.equals(followedUserEmail)) {
+            throw new RuntimeException("You cannot unfollow yourself");
+        }
+
+        if (!userRepository.existsByEmail(userEmail)) {
+            throw new RuntimeException("User not found");
+        }
+
+        if (!userRepository.existsByEmail(followedUserEmail)) {
+            throw new RuntimeException("Followed user not found");
+        }
+
+        if (!userRepository.followsByEmailExists(userEmail, followedUserEmail)) {
+            throw new RuntimeException("User does not follow this user");
+        }
+
+        userRepository.deleteFollowsRelationship(userEmail, followedUserEmail);
+
     }
 }
 

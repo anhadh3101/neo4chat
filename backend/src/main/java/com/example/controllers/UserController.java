@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -72,5 +73,31 @@ public class UserController {
     @GetMapping("/{userId}/diagnostics")
     public java.util.Map<String, Object> diagnoseUserRelationships(@PathVariable String userId) {
         return neo4jDriverService.diagnoseUserRelationships(userId);
+    }
+
+    // UC-5: Follow Another User
+    @PostMapping("/follow")
+    public ResponseEntity<String> followUser(
+        @RequestParam String userEmail, 
+        @RequestParam String followedUserEmail) {
+        try {
+            userService.followUser(userEmail, followedUserEmail);
+            return ResponseEntity.ok("User " + userEmail + " is now following user " + followedUserEmail);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // UC-5: Follow Another User
+    @PostMapping("/unfollow")
+    public ResponseEntity<String> unfollowUser(
+        @RequestParam String userEmail, 
+        @RequestParam String followedUserEmail) {
+        try {
+            userService.unfollowUser(userEmail, followedUserEmail);
+            return ResponseEntity.ok("User " + userEmail + " has now unfollowed user " + followedUserEmail);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
