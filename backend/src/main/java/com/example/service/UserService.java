@@ -77,7 +77,7 @@ public class UserService {
             throw new RuntimeException("Followed user not found");
         }
 
-        userRepository.createFollowsRelationship(userEmail, followedUserEmail);
+        userRepository.createFollowsRelationshipByEmail(userEmail, followedUserEmail);
 
     }
 
@@ -100,7 +100,7 @@ public class UserService {
             throw new RuntimeException("User does not follow this user");
         }
 
-        userRepository.deleteFollowsRelationship(userEmail, followedUserEmail);
+        userRepository.deleteFollowsRelationshipByEmail(userEmail, followedUserEmail);
 
     }
 
@@ -133,5 +133,44 @@ public class UserService {
 
         return userRepository.findMutualConnectionsByEmail(userEmail, otherUserEmail);
     }
-}
 
+    // UC-5: Follow by UserId
+    @Transactional
+    public void followUserByUserId(String userId, String followedUserId) {
+        if (userId.equals(followedUserId)) {
+            throw new RuntimeException("You cannot follow yourself");
+        }
+
+        if (!userRepository.existsByUserId(userId)) {
+            throw new RuntimeException("User not found");
+        }
+
+        if (!userRepository.existsByUserId(followedUserId)) {
+            throw new RuntimeException("Followed user not found");
+        }
+
+        userRepository.createFollowsRelationshipByUserId(userId, followedUserId);
+    }
+
+    // UC-6: Unfollow by UserId
+    @Transactional
+    public void unfollowUserByUserId(String userId, String followedUserId) {
+        if (userId.equals(followedUserId)) {
+            throw new RuntimeException("You cannot unfollow yourself");
+        }
+
+        if (!userRepository.existsByUserId(userId)) {
+            throw new RuntimeException("User not found");
+        }
+
+        if (!userRepository.existsByUserId(followedUserId)) {
+            throw new RuntimeException("Followed user not found");
+        }
+
+        if (!userRepository.followsByUserIdExists(userId, followedUserId)) {
+            throw new RuntimeException("User does not follow this user");
+        }
+
+        userRepository.deleteFollowsRelationshipByUserId(userId, followedUserId);
+    }
+}

@@ -78,8 +78,8 @@ public class UserController {
     // UC-5: Follow Another User
     @PostMapping("/follow")
     public ResponseEntity<String> followUser(
-        @RequestParam String userEmail, 
-        @RequestParam String followedUserEmail) {
+            @RequestParam String userEmail,
+            @RequestParam String followedUserEmail) {
         try {
             userService.followUser(userEmail, followedUserEmail);
             return ResponseEntity.ok("User " + userEmail + " is now following user " + followedUserEmail);
@@ -91,11 +91,37 @@ public class UserController {
     // UC-5: Follow Another User
     @PostMapping("/unfollow")
     public ResponseEntity<String> unfollowUser(
-        @RequestParam String userEmail, 
-        @RequestParam String followedUserEmail) {
+            @RequestParam String userEmail,
+            @RequestParam String followedUserEmail) {
         try {
             userService.unfollowUser(userEmail, followedUserEmail);
             return ResponseEntity.ok("User " + userEmail + " has now unfollowed user " + followedUserEmail);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // UC-5: Follow Another User by UserId
+    @PostMapping("/follow/by-id")
+    public ResponseEntity<String> followUserById(
+            @RequestParam String userId,
+            @RequestParam String followedUserId) {
+        try {
+            userService.followUserByUserId(userId, followedUserId);
+            return ResponseEntity.ok("User " + userId + " is now following user " + followedUserId);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // UC-6: Unfollow Another User by UserId
+    @PostMapping("/unfollow/by-id")
+    public ResponseEntity<String> unfollowUserById(
+            @RequestParam String userId,
+            @RequestParam String followedUserId) {
+        try {
+            userService.unfollowUserByUserId(userId, followedUserId);
+            return ResponseEntity.ok("User " + userId + " has now unfollowed user " + followedUserId);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

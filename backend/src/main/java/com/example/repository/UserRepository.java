@@ -7,50 +7,73 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends Neo4jRepository<User, Integer> {
-    Optional<User> findByUsername(String username);
-    boolean existsByUsername(String username);
-    boolean existsByEmail(String email);
+        Optional<User> findByUsername(String username);
 
-    // UC-5
-    @Query("""
-            MATCH (f:User {email: $userEmail})
-            MATCH (t:User {email: $followedUserEmail})
-            MERGE (f)-[:FOLLOWS]->(t)
-            """)
-    void createFollowsRelationship(String userEmail, String followedUserEmail);
+        boolean existsByUsername(String username);
 
-    // UC-6
-    @Query("""
-            MATCH (f:User {email: $userEmail})-[r:FOLLOWS]->(t:User {email: $followedUserEmail})
-            RETURN COUNT(r) > 0;
-            """)
-    boolean followsByEmailExists(String userEmail, String followedUserEmail);
+        boolean existsByEmail(String email);
 
-    @Query("""
-            MATCH (f:User {email: $userEmail})-[r:FOLLOWS]->(t:User {email: $followedUserEmail})
-            DELETE r;
-            """)
-    void deleteFollowsRelationship(String userEmail, String followedUserEmail);
+        @Query("MATCH (u:User {userId: $userId}) RETURN COUNT(u) > 0")
+        boolean existsByUserId(String userId);
 
-    // UC - 7
-    // Find all followers of a user by email
-    @Query("""
-            MATCH (f:User)-[:FOLLOWS]->(u:User {email: $userEmail})
-            RETURN f;
-            """)
-    List<User> findFollowersByEmail(String userEmail);
+        // UC-5
+        @Query("""
+                        MATCH (f:User {email: $userEmail})
+                        MATCH (t:User {email: $followedUserEmail})
+                        MERGE (f)-[:FOLLOWS]->(t)
+                        """)
+        void createFollowsRelationshipByEmail(String userEmail, String followedUserEmail);
 
-    // Find all followers of a user by email
-    @Query("""
-            MATCH (u:User {email: $userEmail})-[:FOLLOWS]->(f:User)
-            RETURN f;
-            """)
-    List<User> findFollowingByEmail(String userEmail);
+        @Query("""
+                        MATCH (f:User {userId: $userId})
+                        MATCH (t:User {userId: $followedUserId})
+                        MERGE (f)-[:FOLLOWS]->(t)
+                        """)
+        void createFollowsRelationshipByUserId(String userId, String followedUserId);
 
-    @Query("""
-            MATCH (u1:User {email: $userEmail})-[:FOLLOWS]->(m:User)<-[:FOLLOWS]-(u2:User {email: $otherUserEmail})
-            RETURN DISTINCT m;            
-            """)
-    List<User> findMutualConnectionsByEmail(String userEmail, String otherUserEmail);
+        // UC-6
+        @Query("""
+                        MATCH (f:User {email: $userEmail})-[r:FOLLOWS]->(t:User {email: $followedUserEmail})
+                        RETURN COUNT(r) > 0;
+                        """)
+        boolean followsByEmailExists(String userEmail, String followedUserEmail);
+
+        @Query("""
+                        MATCH (f:User {userId: $userId})-[r:FOLLOWS]->(t:User {userId: $followedUserId})
+                        RETURN COUNT(r) > 0;
+                        """)
+        boolean followsByUserIdExists(String userId, String followedUserId);
+
+        @Query("""
+                        MATCH (f:User {email: $userEmail})-[r:FOLLOWS]->(t:User {email: $followedUserEmail})
+                        DELETE r;
+                        """)
+        void deleteFollowsRelationshipByEmail(String userEmail, String followedUserEmail);
+
+        @Query("""
+                        MATCH (f:User {userId: $userId})-[r:FOLLOWS]->(t:User {userId: $followedUserId})
+                        DELETE r;
+                        """)
+        void deleteFollowsRelationshipByUserId(String userId, String followedUserId);
+
+        // UC - 7
+        // Find all followers of a user by email
+        @Query("""
+                        MATCH (f:User)-[:FOLLOWS]->(u:User {email: $userEmail})
+                        RETURN f;
+                        """)
+        List<User> findFollowersByEmail(String userEmail);
+
+        // Find all followers of a user by email
+        @Query("""
+                        MATCH (u:User {email: $userEmail})-[:FOLLOWS]->(f:User)
+                        RETURN f;
+                        """)
+        List<User> findFollowingByEmail(String userEmail);
+
+        @Query("""
+                        MATCH (u1:User {email: $userEmail})-[:FOLLOWS]->(m:User)<-[:FOLLOWS]-(u2:User {email: $otherUserEmail})
+                        RETURN DISTINCT m;
+                        """)
+        List<User> findMutualConnectionsByEmail(String userEmail, String otherUserEmail);
 }
-
