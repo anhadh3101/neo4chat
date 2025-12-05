@@ -100,4 +100,24 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // UC-7: Get Followers
+    @GetMapping("/followers")
+    public List<User> getFollowers(@RequestParam String userEmail) {
+        return userService.getFollowersByEmail(userEmail);
+    }
+
+    // UC-7: Get Followers
+    @GetMapping("/following")
+    public List<User> getFollowing(@RequestParam String userEmail) {
+        return userService.getFollowingByEmail(userEmail);
+    }
+
+    // UC-8: Get Mutual Connections
+    @GetMapping("/mutual")
+    public List<User> getMutualConnections(
+            @RequestParam String userEmail,
+            @RequestParam String otherUserEmail) {
+        return userService.getMutualConnectionsByEmail(userEmail, otherUserEmail);
+    }
 }

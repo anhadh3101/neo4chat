@@ -5,6 +5,9 @@ import com.example.dto.LoginRequest;
 import com.example.dto.RegisterRequest;
 import com.example.model.User;
 import com.example.repository.UserRepository;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -99,6 +102,36 @@ public class UserService {
 
         userRepository.deleteFollowsRelationship(userEmail, followedUserEmail);
 
+    }
+
+    // UC-7
+    @Transactional
+    public List<User> getFollowersByEmail(String userEmail) {
+        if (!userRepository.existsByEmail(userEmail)) {
+            throw new RuntimeException("User not found");
+        }
+        return userRepository.findFollowersByEmail(userEmail);
+    }
+
+    @Transactional
+    public List<User> getFollowingByEmail(String userEmail) {
+        if (!userRepository.existsByEmail(userEmail)) {
+            throw new RuntimeException("User not found");
+        }
+        return userRepository.findFollowingByEmail(userEmail);
+    }
+
+    // UC-8
+    @Transactional
+    public List<User> getMutualConnectionsByEmail(String userEmail, String otherUserEmail) {
+        if (!userRepository.existsByEmail(userEmail)) {
+            throw new RuntimeException("User not found");
+        }
+        if (!userRepository.existsByEmail(otherUserEmail)) {
+            throw new RuntimeException("User not found");
+        }
+
+        return userRepository.findMutualConnectionsByEmail(userEmail, otherUserEmail);
     }
 }
 
