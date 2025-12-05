@@ -7,7 +7,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 public class User {
 
     @Id
-    private Integer userId;
+    private String userId;
 
     private String name;
     private String username;
@@ -16,6 +16,7 @@ public class User {
     private String bio;
     private String city;
     private String country;
+
     private String dob; // ISO 8601 format: 1997-01-03T00:00:00Z
     private Integer followCount;
     private String gender;
@@ -23,11 +24,11 @@ public class User {
 
     // Getters and Setters
 
-    public Integer getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

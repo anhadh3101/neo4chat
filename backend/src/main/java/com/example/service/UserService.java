@@ -50,12 +50,12 @@ public class UserService {
         return user;
     }
 
-    public User viewProfile(Integer userId) {
+    public User viewProfile(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Not found"));
     }
 
-    public User editProfile(Integer userId, EditProfileRequest req) {
+    public User editProfile(String userId, EditProfileRequest req) {
         User user = viewProfile(userId);
         user.setName(req.name);
         user.setBio(req.bio);
@@ -64,44 +64,38 @@ public class UserService {
 
     // UC-5
     @Transactional
-    public void followUser(String userEmail, String followedUserEmail) {
+    public List<User> followUser(String userEmail, String followedUserEmail) {
         if (userEmail.equals(followedUserEmail)) {
             throw new RuntimeException("You cannot follow yourself");
         }
 
-        if (!userRepository.existsByEmail(userEmail)) {
-            throw new RuntimeException("User not found");
-        }
-
-        if (!userRepository.existsByEmail(followedUserEmail)) {
-            throw new RuntimeException("Followed user not found");
-        }
+        User follower = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User followed = userRepository.findByEmail(followedUserEmail)
+                .orElseThrow(() -> new RuntimeException("Followed user not found"));
 
         userRepository.createFollowsRelationshipByEmail(userEmail, followedUserEmail);
-
+        return List.of(follower, followed);
     }
 
     // UC-6
     @Transactional
-    public void unfollowUser(String userEmail, String followedUserEmail) {
+    public List<User> unfollowUser(String userEmail, String followedUserEmail) {
         if (userEmail.equals(followedUserEmail)) {
             throw new RuntimeException("You cannot unfollow yourself");
         }
 
-        if (!userRepository.existsByEmail(userEmail)) {
-            throw new RuntimeException("User not found");
-        }
-
-        if (!userRepository.existsByEmail(followedUserEmail)) {
-            throw new RuntimeException("Followed user not found");
-        }
+        User follower = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User followed = userRepository.findByEmail(followedUserEmail)
+                .orElseThrow(() -> new RuntimeException("Followed user not found"));
 
         if (!userRepository.followsByEmailExists(userEmail, followedUserEmail)) {
             throw new RuntimeException("User does not follow this user");
         }
 
         userRepository.deleteFollowsRelationshipByEmail(userEmail, followedUserEmail);
-
+        return List.of(follower, followed);
     }
 
     // UC-7
@@ -121,6 +115,24 @@ public class UserService {
         return userRepository.findFollowingByEmail(userEmail);
     }
 
+    // UC-7: Get Followers by UserId
+    @Transactional
+    public List<User> getFollowersByUserId(String userId) {
+        if (!userRepository.existsByUserId(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        return userRepository.findFollowersByUserId(userId);
+    }
+
+    // UC-7: Get Following by UserId
+    @Transactional
+    public List<User> getFollowingByUserId(String userId) {
+        if (!userRepository.existsByUserId(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        return userRepository.findFollowingByUserId(userId);
+    }
+
     // UC-8
     @Transactional
     public List<User> getMutualConnectionsByEmail(String userEmail, String otherUserEmail) {
@@ -134,43 +146,52 @@ public class UserService {
         return userRepository.findMutualConnectionsByEmail(userEmail, otherUserEmail);
     }
 
+    // UC-8: Get Mutual Connections by UserId
+    @Transactional
+    public List<User> getMutualConnectionsByUserId(String userId, String otherUserId) {
+        if (!userRepository.existsByUserId(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        if (!userRepository.existsByUserId(otherUserId)) {
+            throw new RuntimeException("User not found");
+        }
+
+        return userRepository.findMutualConnectionsByUserId(userId, otherUserId);
+    }
+
     // UC-5: Follow by UserId
     @Transactional
-    public void followUserByUserId(String userId, String followedUserId) {
+    public List<User> followUserByUserId(String userId, String followedUserId) {
         if (userId.equals(followedUserId)) {
             throw new RuntimeException("You cannot follow yourself");
         }
 
-        if (!userRepository.existsByUserId(userId)) {
-            throw new RuntimeException("User not found");
-        }
-
-        if (!userRepository.existsByUserId(followedUserId)) {
-            throw new RuntimeException("Followed user not found");
-        }
+        User follower = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User followed = userRepository.findByUserId(followedUserId)
+                .orElseThrow(() -> new RuntimeException("Followed user not found"));
 
         userRepository.createFollowsRelationshipByUserId(userId, followedUserId);
+        return List.of(follower, followed);
     }
 
     // UC-6: Unfollow by UserId
     @Transactional
-    public void unfollowUserByUserId(String userId, String followedUserId) {
+    public List<User> unfollowUserByUserId(String userId, String followedUserId) {
         if (userId.equals(followedUserId)) {
             throw new RuntimeException("You cannot unfollow yourself");
         }
 
-        if (!userRepository.existsByUserId(userId)) {
-            throw new RuntimeException("User not found");
-        }
-
-        if (!userRepository.existsByUserId(followedUserId)) {
-            throw new RuntimeException("Followed user not found");
-        }
+        User follower = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        User followed = userRepository.findByUserId(followedUserId)
+                .orElseThrow(() -> new RuntimeException("Followed user not found"));
 
         if (!userRepository.followsByUserIdExists(userId, followedUserId)) {
             throw new RuntimeException("User does not follow this user");
         }
 
         userRepository.deleteFollowsRelationshipByUserId(userId, followedUserId);
+        return List.of(follower, followed);
     }
 }

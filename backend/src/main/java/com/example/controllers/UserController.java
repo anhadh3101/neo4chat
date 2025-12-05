@@ -49,12 +49,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getProfile(@PathVariable Integer id) {
+    public User getProfile(@PathVariable String id) {
         return userService.viewProfile(id);
     }
 
     @PutMapping("/{id}")
-    public User editProfile(@PathVariable Integer id, @RequestBody EditProfileRequest req) {
+    public User editProfile(@PathVariable String id, @RequestBody EditProfileRequest req) {
         return userService.editProfile(id, req);
     }
 
@@ -81,21 +81,27 @@ public class UserController {
             @RequestParam String userEmail,
             @RequestParam String followedUserEmail) {
         try {
-            userService.followUser(userEmail, followedUserEmail);
-            return ResponseEntity.ok("User " + userEmail + " is now following user " + followedUserEmail);
+            List<User> users = userService.followUser(userEmail, followedUserEmail);
+            User follower = users.get(0);
+            User followed = users.get(1);
+            return ResponseEntity.ok("User " + follower.getName() + " (" + follower.getUserId()
+                    + ") is now following user " + followed.getName() + " (" + followed.getUserId() + ")");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // UC-5: Follow Another User
+    // UC-6: Unfollow Another User
     @PostMapping("/unfollow")
     public ResponseEntity<String> unfollowUser(
             @RequestParam String userEmail,
             @RequestParam String followedUserEmail) {
         try {
-            userService.unfollowUser(userEmail, followedUserEmail);
-            return ResponseEntity.ok("User " + userEmail + " has now unfollowed user " + followedUserEmail);
+            List<User> users = userService.unfollowUser(userEmail, followedUserEmail);
+            User follower = users.get(0);
+            User followed = users.get(1);
+            return ResponseEntity.ok("User " + follower.getName() + " (" + follower.getUserId()
+                    + ") has now unfollowed user " + followed.getName() + " (" + followed.getUserId() + ")");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -107,8 +113,11 @@ public class UserController {
             @RequestParam String userId,
             @RequestParam String followedUserId) {
         try {
-            userService.followUserByUserId(userId, followedUserId);
-            return ResponseEntity.ok("User " + userId + " is now following user " + followedUserId);
+            List<User> users = userService.followUserByUserId(userId, followedUserId);
+            User follower = users.get(0);
+            User followed = users.get(1);
+            return ResponseEntity.ok("User " + follower.getName() + " (" + follower.getUserId()
+                    + ") is now following user " + followed.getName() + " (" + followed.getUserId() + ")");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -120,8 +129,11 @@ public class UserController {
             @RequestParam String userId,
             @RequestParam String followedUserId) {
         try {
-            userService.unfollowUserByUserId(userId, followedUserId);
-            return ResponseEntity.ok("User " + userId + " has now unfollowed user " + followedUserId);
+            List<User> users = userService.unfollowUserByUserId(userId, followedUserId);
+            User follower = users.get(0);
+            User followed = users.get(1);
+            return ResponseEntity.ok("User " + follower.getName() + " (" + follower.getUserId()
+                    + ") has now unfollowed user " + followed.getName() + " (" + followed.getUserId() + ")");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -133,10 +145,22 @@ public class UserController {
         return userService.getFollowersByEmail(userEmail);
     }
 
-    // UC-7: Get Followers
+    // UC-7: Get Following
     @GetMapping("/following")
     public List<User> getFollowing(@RequestParam String userEmail) {
         return userService.getFollowingByEmail(userEmail);
+    }
+
+    // UC-7: Get Followers by UserId
+    @GetMapping("/followers/by-id")
+    public List<User> getFollowersById(@RequestParam String userId) {
+        return userService.getFollowersByUserId(userId);
+    }
+
+    // UC-7: Get Following by UserId
+    @GetMapping("/following/by-id")
+    public List<User> getFollowingById(@RequestParam String userId) {
+        return userService.getFollowingByUserId(userId);
     }
 
     // UC-8: Get Mutual Connections
@@ -145,5 +169,13 @@ public class UserController {
             @RequestParam String userEmail,
             @RequestParam String otherUserEmail) {
         return userService.getMutualConnectionsByEmail(userEmail, otherUserEmail);
+    }
+
+    // UC-8: Get Mutual Connections by UserId
+    @GetMapping("/mutual/by-id")
+    public List<User> getMutualConnectionsById(
+            @RequestParam String userId,
+            @RequestParam String otherUserId) {
+        return userService.getMutualConnectionsByUserId(userId, otherUserId);
     }
 }
