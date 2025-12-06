@@ -141,6 +141,15 @@ public class Neo4ChatCLI {
         }
     }
 
+    // --- LOGIN CHECK HELPER ---
+    private boolean ensureLoggedIn() {
+        if (currentUserId == null) {
+            println("\nYou are not logged in. Please login first.");
+            return false;
+        }
+        return true;
+    }
+
     // UC-1: User Registration
     private void handleRegister() {
         println("\n--- UC-1: User Registration ---");
@@ -188,11 +197,12 @@ public class Neo4ChatCLI {
 
     // UC-3: View Profile
     private void handleViewProfile() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-3: View Profile ---");
         String userId = ensureUserIdOrPrompt();
-        if (userId == null) {
-            return;
-        }
+        if (userId == null) return;
+
         try {
             User user = userService.viewProfile(userId);
             println("\nProfile:");
@@ -204,11 +214,11 @@ public class Neo4ChatCLI {
 
     // UC-4: Edit Profile
     private void handleEditProfile() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-4: Edit Profile ---");
         String userId = ensureUserIdOrPrompt();
-        if (userId == null) {
-            return;
-        }
+        if (userId == null) return;
 
         String name = prompt("New name (leave blank to keep current): ");
         String bio = prompt("New bio (leave blank to keep current): ");
@@ -227,8 +237,10 @@ public class Neo4ChatCLI {
         }
     }
 
-    // UC-5: Follow Another User (by email)
+    // UC-5: Follow Another User
     private void handleFollowUser() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-5: Follow Another User ---");
         println("Choose identifier type:");
         println("  1. Email");
@@ -278,8 +290,10 @@ public class Neo4ChatCLI {
         }
     }
 
-    // UC-6: Unfollow a User (by email)
+    // UC-6: Unfollow a User
     private void handleUnfollowUser() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-6: Unfollow a User ---");
         println("Choose identifier type:");
         println("  1. Email");
@@ -331,6 +345,8 @@ public class Neo4ChatCLI {
 
     // UC-7: View Followers / Following
     private void handleViewConnections() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-7: View Followers / Following ---");
         println("Choose identifier type:");
         println("  1. Email");
@@ -355,9 +371,7 @@ public class Neo4ChatCLI {
                 following = userService.getFollowingByEmail(trimmed);
             } else {
                 String userId = ensureUserIdOrPrompt();
-                if (userId == null) {
-                    return;
-                }
+                if (userId == null) return;
                 followers = userService.getFollowersByUserId(userId);
                 following = userService.getFollowingByUserId(userId);
             }
@@ -374,6 +388,8 @@ public class Neo4ChatCLI {
 
     // UC-8: Mutual Connections
     private void handleMutualConnections() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-8: Mutual Connections ---");
         println("Choose identifier type:");
         println("  1. Email");
@@ -399,9 +415,7 @@ public class Neo4ChatCLI {
                 mutual = userService.getMutualConnectionsByEmail(email1.trim(), email2.trim());
             } else {
                 String userId = ensureUserIdOrPrompt();
-                if (userId == null) {
-                    return;
-                }
+                if (userId == null) return;
                 String otherUserId = prompt("Other user's ID: ");
                 if (otherUserId == null || otherUserId.isBlank()) {
                     println("\nOther user ID not provided. Aborting.");
@@ -420,11 +434,11 @@ public class Neo4ChatCLI {
 
     // UC-9: Friend Recommendations
     private void handleFriendRecommendations() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-9: Friend Recommendations ---");
         String userId = ensureUserIdOrPrompt();
-        if (userId == null) {
-            return;
-        }
+        if (userId == null) return;
 
         try {
             List<UserSearchResult> recs = neo4jDriverService.getFriendRecommendations(userId);
@@ -437,6 +451,8 @@ public class Neo4ChatCLI {
 
     // UC-10: Search Users
     private void handleSearchUsers() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-10: Search Users ---");
         String term = prompt("Search term (name or username): ");
         String limitStr = promptWithDefault("Limit", "10");
@@ -457,11 +473,11 @@ public class Neo4ChatCLI {
 
     // UC-11: Explore Popular Users
     private void handlePopularUsers() {
+        if (!ensureLoggedIn()) return;
+
         println("\n--- UC-11: Explore Popular Users ---");
         String userId = ensureUserIdOrPrompt();
-        if (userId == null) {
-            return;
-        }
+        if (userId == null) return;
         String limitStr = promptWithDefault("Limit", "10");
 
         try {
@@ -476,13 +492,19 @@ public class Neo4ChatCLI {
         }
     }
 
+    // UC-12: Logout
     private void handleLogout() {
+        if (!ensureLoggedIn()) {
+            println("\nYou are not logged in.");
+            return;
+        }
         currentUserId = null;
         currentUsername = null;
         currentEmail = null;
         println("\nLogged out.");
     }
 
+    // --- HELPER METHODS ---
     private String ensureUserIdOrPrompt() {
         if (currentUserId != null) {
             String useCurrent = promptWithDefault("Use current logged-in user ID", currentUserId);

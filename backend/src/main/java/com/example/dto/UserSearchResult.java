@@ -4,17 +4,19 @@ public class UserSearchResult {
     private String userId;
     private String name;
     private String username;
+    private String email;
     private String bio;
     private Integer followCount;
 
     public UserSearchResult() {
     }
 
-    public UserSearchResult(String userId, String name, String username, String bio) {
+    public UserSearchResult(String userId, String name, String username, String bio, String email) {
         this.userId = userId;
         this.name = name;
         this.username = username;
         this.bio = bio;
+        this.email = email;
     }
 
     public UserSearchResult(String userId, String name, String username, String bio, Integer followCount) {
@@ -23,6 +25,7 @@ public class UserSearchResult {
         this.username = username;
         this.bio = bio;
         this.followCount = followCount;
+        this.email = email;
     }
 
     public String getUserId() {
@@ -55,6 +58,14 @@ public class UserSearchResult {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Integer getFollowCount() {

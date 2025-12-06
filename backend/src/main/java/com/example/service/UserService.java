@@ -5,6 +5,8 @@ import com.example.dto.LoginRequest;
 import com.example.dto.RegisterRequest;
 import com.example.model.User;
 import com.example.repository.UserRepository;
+import java.util.UUID;
+
 
 import java.util.List;
 
@@ -31,6 +33,7 @@ public class UserService {
         }
 
         User u = new User();
+        u.setUserId(UUID.randomUUID().toString());
         u.setName(req.name);
         u.setEmail(req.email);
         u.setUsername(req.username);
